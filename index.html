@@ -199,35 +199,6 @@
       linha.remove(); // Remove a linha
       calcularTotal(); // Recalcula o total após a exclusão
     }
-
-    // Função para salvar os dados em um arquivo-texto
-    function salvarDados() {
-      const linhas = document.querySelectorAll("#tabela-contas tbody tr");
-      const dados = [];
-
-      // Percorrer todas as linhas e coletar os dados
-      linhas.forEach((linha) => {
-        const descricao = linha.querySelector("td:nth-child(1) input").value || "Sem descrição";
-        const valor = parseFloat(linha.querySelector("td:nth-child(2) input").value) || 0;
-
-        dados.push({ descricao, valor });
-      });
-
-      // Transformar os dados em uma string no formato CSV/texto
-      let conteudo = "Descrição,Valor (R$)\n";
-      dados.forEach((item) => {
-        conteudo += `${item.descricao},${item.valor.toFixed(2)}\n`;
-      });
-
-      // Baixar o arquivo de dados como um .csv
-      const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "minhas_contas.csv"; // Nome do arquivo que será salvo
-      a.click(); // Simula o clique para download
-      URL.revokeObjectURL(url); // Limpa o URL gerado
-    }
   </script>
 </body>
 </html>
