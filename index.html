@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <script src="script.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minhas Contas Interativas</title>
@@ -84,6 +85,85 @@
     <button onclick="salvarDados()">Salvar Dados</button>
   </div>
 
+   <script>
+    // Configurações de acesso ao GitHub
+    const GITHUB_USERNAME = "SEU_NOME_DE_USUARIO_AQUI";
+    const REPO_NAME = "SEU_REPOSITORIO_AQUI";
+    const BRANCH = "main"; // Branch principal
+    const FILE_PATH = "contas.json"; // Caminho do arquivo (raiz do repositório)
+    const TOKEN = "SEU_PERSONAL_ACCESS_TOKEN_AQUI"; // Substitua pelo token obtido no GitHub
+
+    // Função para salvar dados no GitHub
+    async function salvarDados() {
+      const tabela = document.querySelector("#tabela-contas tbody");
+      const linhas = tabela.querySelectorAll("tr");
+      const dados = [];
+
+      // Coleta as informações da tabela
+      linhas.forEach((linha) => {
+        const descricao = linha.querySelector("td:nth-child(1) input").value;
+        const valor = linha.querySelector("td:nth-child(2) input").value;
+        if (descricao && valor) {
+          dados.push({ descricao, valor: parseFloat(valor) });
+        }
+      });
+
+      const content = JSON.stringify(dados, null, 2); // Transforma os dados em JSON
+
+      const fileData = {
+        message: "Atualizando contas no arquivo contas.json",
+        content: btoa(content), // Codifica o conteúdo do JSON em base64
+        branch: BRANCH,
+      };
+
+      // Etapa 1: Obter o SHA do arquivo existente (caso ele já exista no repositório)
+      let sha = "";
+      const fileUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`;
+
+      try {
+        const response = await fetch(fileUrl, {
+          headers: {
+            Authorization: `token ${TOKEN}`,
+          },
+        });
+
+        if (response.ok) {
+          const fileInfo = await response.json();
+          sha = fileInfo.sha; // Recupera o SHA do arquivo atual
+        }
+      } catch (error) {
+        console.warn("Arquivo não encontrado no Repositório. Será criado agora.");
+      }
+
+      // Adiciona o SHA ao corpo de dados caso o arquivo já exista
+      if (sha) {
+        fileData.sha = sha;
+      }
+
+      // Etapa 2: Salvar o arquivo no repositório do GitHub usando a API
+      try {
+        const response = await fetch(fileUrl, {
+          method: "PUT",
+          headers: {
+            Authorization: `token ${TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(fileData),
+        });
+
+        if (response.ok) {
+          alert("Dados salvos no repositório com sucesso!");
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.message);
+        }
+      } catch (error) {
+        console.error("Erro ao salvar os dados no GitHub:", error);
+        alert("Erro ao salvar os dados no GitHub.");
+      }
+    }
+  </script>
+  
   <script>
     // Função para calcular o total
     function calcularTotal() {
