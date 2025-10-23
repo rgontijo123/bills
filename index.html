@@ -93,76 +93,43 @@
     const FILE_PATH = "contas.json"; // Caminho do arquivo (raiz do repositório)
     const TOKEN = "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"; // Substitua pelo token obtido no GitHub
 
-    // Função para salvar dados no GitHub
-    async function salvarDados() {
-      const tabela = document.querySelector("#tabela-contas tbody");
-      const linhas = tabela.querySelectorAll("tr");
-      const dados = [];
+<script>
+async function salvarDados() {
+  const tabela = document.querySelector("#tabela-contas tbody");
+  const linhas = tabela.querySelectorAll("tr");
+  const dados = [];
 
-      // Coleta as informações da tabela
-      linhas.forEach((linha) => {
-        const descricao = linha.querySelector("td:nth-child(1) input").value;
-        const valor = linha.querySelector("td:nth-child(2) input").value;
-        if (descricao && valor) {
-          dados.push({ descricao, valor: parseFloat(valor) });
-        }
-      });
-
-      const content = JSON.stringify(dados, null, 2); // Transforma os dados em JSON
-
-      const fileData = {
-        message: "Atualizando contas no arquivo contas.json",
-        content: btoa(content), // Codifica o conteúdo do JSON em base64
-        branch: BRANCH,
-      };
-
-      // Etapa 1: Obter o SHA do arquivo existente (caso ele já exista no repositório)
-      let sha = "";
-      const fileUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${FILE_PATH}`;
-
-      try {
-        const response = await fetch(fileUrl, {
-          headers: {
-            Authorization: `token ${TOKEN}`,
-          },
-        });
-
-        if (response.ok) {
-          const fileInfo = await response.json();
-          sha = fileInfo.sha; // Recupera o SHA do arquivo atual
-        }
-      } catch (error) {
-        console.warn("Arquivo não encontrado no Repositório. Será criado agora.");
-      }
-
-      // Adiciona o SHA ao corpo de dados caso o arquivo já exista
-      if (sha) {
-        fileData.sha = sha;
-      }
-
-      // Etapa 2: Salvar o arquivo no repositório do GitHub usando a API
-      try {
-        const response = await fetch(fileUrl, {
-          method: "PUT",
-          headers: {
-            Authorization: `token ${TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(fileData),
-        });
-
-        if (response.ok) {
-          alert("Dados salvos no repositório com sucesso!");
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.message);
-        }
-      } catch (error) {
-        console.error("Erro ao salvar os dados no GitHub:", error);
-        alert("Erro ao salvar os dados no GitHub.");
-      }
+  linhas.forEach((linha) => {
+    const descricao = linha.querySelector("td:nth-child(1) input").value;
+    const valor = linha.querySelector("td:nth-child(2) input").value;
+    if (descricao && valor) {
+      dados.push({ descricao, valor: parseFloat(valor) });
     }
-  </script>
+  });
+
+  // Cria o conteúdo JSON
+  const content = JSON.stringify(dados, null, 2);
+
+  // Cria uma issue usando o endpoint público (sem token!)
+  const response = await fetch("https://api.github.com/repos/rgontijo123/bills/issues", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/vnd.github+json"
+    },
+    body: JSON.stringify({
+      title: "Atualizar contas.json",
+      body: `\`\`\`json\n${content}\n\`\`\``
+    })
+  });
+
+  if (response.ok) {
+    alert("Solicitação enviada! O arquivo será atualizado em alguns segundos.");
+  } else {
+    alert("Erro ao criar a solicitação no GitHub.");
+  }
+}
+</script>
   
   <script>
     // Função para calcular o total
