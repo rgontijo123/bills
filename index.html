@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Excel HTML - Minhas Contas</title>
+  <title>Minhas Contas Interativas</title>
   <style>
     table {
-      width: 50%;
+      width: 70%;
       border-collapse: collapse;
       margin: 20px auto;
     }
@@ -18,7 +18,7 @@
       padding: 10px;
     }
     input[type="number"] {
-      width: 90%;
+      width: 80%;
       padding: 5px;
       text-align: right;
     }
@@ -26,59 +26,127 @@
       font-weight: bold;
       background-color: #f0f0f0;
     }
+    .buttons {
+      margin: 10px auto;
+      text-align: center;
+    }
+    button {
+      margin: 5px;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
   <h2 style="text-align: center;">Minhas Contas</h2>
 
-  <table>
+  <table id="tabela-contas">
     <thead>
       <tr>
         <th>Descrição</th>
         <th>Valor (R$)</th>
+        <th>Ações</th>
       </tr>
     </thead>
-    <tbody id="tabela-contas">
+    <tbody>
       <tr>
-        <td>Conta de Luz</td>
-        <td><input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()"></td>
+        <td><input type="text" value="Conta de Luz"></td>
+        <td><input type="number" class="valor" placeholder="0.00" value="0" oninput="calcularTotal()"></td>
+        <td>
+          <button onclick="excluirItem(this)">Excluir</button>
+        </td>
       </tr>
       <tr>
-        <td>Conta de Água</td>
-        <td><input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()"></td>
-      </tr>
-      <tr>
-        <td>Internet</td>
-        <td><input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()"></td>
-      </tr>
-      <tr>
-        <td>Aluguel</td>
-        <td><input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()"></td>
+        <td><input type="text" value="Conta de Água"></td>
+        <td><input type="number" class="valor" placeholder="0.00" value="0" oninput="calcularTotal()"></td>
+        <td>
+          <button onclick="excluirItem(this)">Excluir</button>
+        </td>
       </tr>
     </tbody>
     <tfoot>
       <tr>
         <td class="total">Total</td>
         <td class="total" id="campo-total">R$ 0.00</td>
+        <td></td>
       </tr>
     </tfoot>
   </table>
 
+  <div class="buttons">
+    <button onclick="adicionarItem()">Adicionar Item</button>
+    <button onclick="salvarDados()">Salvar Dados</button>
+  </div>
+
   <script>
+    // Função para calcular o total
     function calcularTotal() {
-      // Selecionar todos os inputs com a classe "valor"
       const valores = document.querySelectorAll(".valor");
       let total = 0;
 
-      // Somar os valores digitados
       valores.forEach((input) => {
-        const valor = parseFloat(input.value) || 0; // Pega o valor do input ou 0 se estiver vazio
-        total += valor;
+        total += parseFloat(input.value) || 0;
       });
 
-      // Atualizar o campo de total na tabela
-      const campoTotal = document.getElementById("campo-total");
-      campoTotal.textContent = `R$ ${total.toFixed(2)}`; // Mostrar com 2 casas decimais
+      document.getElementById("campo-total").textContent = `R$ ${total.toFixed(2)}`;
+    }
+
+    // Função para adicionar um novo item
+    function adicionarItem() {
+      const tabela = document.getElementById("tabela-contas").getElementsByTagName("tbody")[0];
+      const novaLinha = tabela.insertRow();
+
+      // Criando as colunas da nova linha (Descrição, Valor e Ações)
+      const celulaDescricao = novaLinha.insertCell(0);
+      const celulaValor = novaLinha.insertCell(1);
+      const celulaAcoes = novaLinha.insertCell(2);
+
+      // Criando os elementos dos inputs e do botão de exclusão
+      celulaDescricao.innerHTML = `<input type="text" placeholder="Descrição">`;
+      celulaValor.innerHTML = `<input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()">`;
+      celulaAcoes.innerHTML = `<button onclick="excluirItem(this)">Excluir</button>`;
+    }
+
+    // Função para excluir uma linha
+    function excluirItem(botao) {
+      const linha = botao.parentElement.parentElement; // Linha do botão clicado
+      linha.remove(); // Remove a linha
+      calcularTotal(); // Recalcula o total após a exclusão
+    }
+
+    // Função para salvar os dados em um arquivo-texto
+    function salvarDados() {
+      const linhas = document.querySelectorAll("#tabela-contas tbody tr");
+      const dados = [];
+
+      // Percorrer todas as linhas e coletar os dados
+      linhas.forEach((linha) => {
+        const descricao = linha.querySelector("td:nth-child(1) input").value || "Sem descrição";
+        const valor = parseFloat(linha.querySelector("td:nth-child(2) input").value) || 0;
+
+        dados.push({ descricao, valor });
+      });
+
+      // Transformar os dados em uma string no formato CSV/texto
+      let conteudo = "Descrição,Valor (R$)\n";
+      dados.forEach((item) => {
+        conteudo += `${item.descricao},${item.valor.toFixed(2)}\n`;
+      });
+
+      // Baixar o arquivo de dados como um .csv
+      const blob = new Blob([conteudo], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "minhas_contas.csv"; // Nome do arquivo que será salvo
+      a.click(); // Simula o clique para download
+      URL.revokeObjectURL(url); // Limpa o URL gerado
     }
   </script>
 </body>
