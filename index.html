@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <script src="script.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minhas Contas Interativas</title>
@@ -18,7 +17,7 @@
     th, td {
       padding: 10px;
     }
-    input[type="number"] {
+    input[type="number"], input[type="text"] {
       width: 80%;
       padding: 5px;
       text-align: right;
@@ -59,16 +58,12 @@
       <tr>
         <td><input type="text" value="Conta de Luz"></td>
         <td><input type="number" class="valor" placeholder="0.00" value="0" oninput="calcularTotal()"></td>
-        <td>
-          <button onclick="excluirItem(this)">Excluir</button>
-        </td>
+        <td><button onclick="excluirItem(this)">Excluir</button></td>
       </tr>
       <tr>
         <td><input type="text" value="Conta de Água"></td>
         <td><input type="number" class="valor" placeholder="0.00" value="0" oninput="calcularTotal()"></td>
-        <td>
-          <button onclick="excluirItem(this)">Excluir</button>
-        </td>
+        <td><button onclick="excluirItem(this)">Excluir</button></td>
       </tr>
     </tbody>
     <tfoot>
@@ -85,86 +80,72 @@
     <button onclick="salvarDados()">Salvar Dados</button>
   </div>
 
-   <script>
-    // Configurações de acesso ao GitHub
-    const GITHUB_USERNAME = "rgontijo123";
-    const REPO_NAME = "bills";
-    const BRANCH = "main"; // Branch principal
-    const FILE_PATH = "contas.json"; // Caminho do arquivo (raiz do repositório)
-    const TOKEN = "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"; // Substitua pelo token obtido no GitHub
-
-<script>
-async function salvarDados() {
-  const tabela = document.querySelector("#tabela-contas tbody");
-  const linhas = tabela.querySelectorAll("tr");
-  const dados = [];
-
-  linhas.forEach((linha) => {
-    const descricao = linha.querySelector("td:nth-child(1) input").value;
-    const valor = linha.querySelector("td:nth-child(2) input").value;
-    if (descricao && valor) {
-      dados.push({ descricao, valor: parseFloat(valor) });
-    }
-  });
-
-  // Cria o conteúdo JSON
-  const content = JSON.stringify(dados, null, 2);
-
-  // Cria uma issue usando o endpoint público (sem token!)
-  const response = await fetch("https://api.github.com/repos/rgontijo123/bills/issues", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/vnd.github+json"
-    },
-    body: JSON.stringify({
-      title: "Atualizar contas.json",
-      body: `\`\`\`json\n${content}\n\`\`\``
-    })
-  });
-
-  if (response.ok) {
-    alert("Solicitação enviada! O arquivo será atualizado em alguns segundos.");
-  } else {
-    alert("Erro ao criar a solicitação no GitHub.");
-  }
-}
-</script>
-  
   <script>
-    // Função para calcular o total
+    // ======== Função para calcular o total ========
     function calcularTotal() {
       const valores = document.querySelectorAll(".valor");
       let total = 0;
-
       valores.forEach((input) => {
         total += parseFloat(input.value) || 0;
       });
-
       document.getElementById("campo-total").textContent = `R$ ${total.toFixed(2)}`;
     }
 
-    // Função para adicionar um novo item
+    // ======== Função para adicionar um novo item ========
     function adicionarItem() {
-      const tabela = document.getElementById("tabela-contas").getElementsByTagName("tbody")[0];
+      const tabela = document.querySelector("#tabela-contas tbody");
       const novaLinha = tabela.insertRow();
 
-      // Criando as colunas da nova linha (Descrição, Valor e Ações)
       const celulaDescricao = novaLinha.insertCell(0);
       const celulaValor = novaLinha.insertCell(1);
       const celulaAcoes = novaLinha.insertCell(2);
 
-      // Criando os elementos dos inputs e do botão de exclusão
       celulaDescricao.innerHTML = `<input type="text" placeholder="Descrição">`;
       celulaValor.innerHTML = `<input type="number" class="valor" placeholder="0.00" oninput="calcularTotal()">`;
       celulaAcoes.innerHTML = `<button onclick="excluirItem(this)">Excluir</button>`;
     }
 
-    // Função para excluir uma linha
+    // ======== Função para excluir um item ========
     function excluirItem(botao) {
-      const linha = botao.parentElement.parentElement; // Linha do botão clicado
-      linha.remove(); // Remove a linha
-      calcularTotal(); // Recalcula o total após a exclusão
+      botao.closest("tr").remove();
+      calcularTotal();
+    }
+
+    // ======== Função para salvar os dados ========
+    async function salvarDados() {
+      const tabela = document.querySelector("#tabela-contas tbody");
+      const linhas = tabela.querySelectorAll("tr");
+      const dados = [];
+
+      linhas.forEach((linha) => {
+        const descricao = linha.querySelector("td:nth-child(1) input").value;
+        const valor = linha.querySelector("td:nth-child(2) input").value;
+        if (descricao && valor) {
+          dados.push({ descricao, valor: parseFloat(valor) });
+        }
+      });
+
+      const content = JSON.stringify(dados, null, 2);
+
+      // Envia uma issue para o repositório (sem token!)
+      const response = await fetch("https://api.github.com/repos/rgontijo123/bills/issues", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/vnd.github+json"
+        },
+        body: JSON.stringify({
+          title: "Atualizar contas.json",
+          body: `\`\`\`json\n${content}\n\`\`\``
+        })
+      });
+
+      if (response.ok) {
+        alert("Solicitação enviada! O arquivo contas.json será atualizado automaticamente em alguns segundos.");
+      } else {
+        const data = await response.json();
+        alert("Erro ao criar solicitação: " + data.message);
+      }
     }
   </script>
 </body>
